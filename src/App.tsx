@@ -1,127 +1,190 @@
-import { useState,useEffect } from 'react';
+import { useState,useRef } from 'react';
 import './App.css';
-import Card from './components/quiz_card/Card';
-import { data } from './data/questions';
-function App() {
-  const [turn,setTurn] = useState<number>(0)
-  const [startButton,setStartButton] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [color,setColor] = useState(false)
-  const [datas, setDatas] = useState<typeof data>(data)
-  const [isNext,setIsNext] = useState<boolean>(false)
-  const [score, setScore] = useState<number>(0); 
-  const [isOver,setIsOver] = useState<boolean>(false)
-  const [turn2,setTurn2] = useState<number>(0);
- const shuffle = (arr:string[]):string[] =>{
-  for (let i = arr.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i+1));
-    let k = arr[i];
-    arr[i] = arr[j];
-    arr[j] = k;
-  }
-  return arr
+import  styled  from 'styled-components';
+import words from "./wordList.json"
+import Mui from './components/Mui';
+import { Typography } from '@mui/material';
+import Test from './components/Test';
+import Moviecard from './components/Moviecard';
 
- }
-  
-  let p = ["hasan","emreah"]
-   const start = () =>{
-    setTimeout(() =>{  
-      setStartButton(true)
-      setIsLoading(false)
-    },1000)
-    setIsLoading(true)
-    shuffle(datas[turn].answers)
+const Header = styled.div
+`
+  font-size:3rem;
+
+`
+const Wrapper = styled.div
+`
+display:flex;
+flex-direction: column;
+align-items: center;
+
+
+`
+/* font-size:1.5rem;
+  border:2px solid white;
+  border-radius:5px; */
+const Button = styled.button
+`
+ 
+  align-items: center;
+  appearance: none;
+  background-color: #fff;
+  border-radius: 24px;
+  border-style: none;
+  box-shadow: rgba(0, 0, 0, .2) 0 3px 5px -1px,rgba(0, 0, 0, .14) 0 6px 10px 0,rgba(0, 0, 0, .12) 0 1px 18px 0;
+  box-sizing: border-box;
+  color: black;
+  cursor: pointer;
+  display: inline-flex;
+  fill: currentcolor;
+  font-family: "Google Sans",Roboto,Arial,sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  height: 32px;
+  justify-content: center;
+  letter-spacing: .25px;
+  line-height: normal;
+  max-width: 100%;
+  overflow: visible;
+  padding: 2px 24px;
+  position: relative;
+  text-align: center;
+  @media   (max-width: 660px) {
+    padding:2px 10px;
   }
-  useEffect(()=>{
-    if(turn2 === datas.length){
-      setIsOver(true)
-    }
-    console.log(turn2)
-    
-  },[turn2])
-  const changeColor = (e:React.MouseEvent<HTMLLIElement, MouseEvent>) =>{
-  /* if(!isNext){
-      if(datas[turn].correct_answer === e.currentTarget.innerHTML){
-        e.currentTarget.style.backgroundColor = "green"
-        console.log(datas[turn])
-        setIsNext(true)
-        setScore(prev => prev + 1)
-      }else{
-        e.currentTarget.style.background = "red"
-        setIsNext(true)
-        console.log(datas[turn])
-        
+  @media   (max-width: 406px) {
+    padding:2px 5px;
   }
-    }
-   */
-  }
-  return (
-    <div className="App">
-   { !isOver &&  <div id='app-title'>
-      <div style={{width:"100%",height:"100%",position:"relative"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-      <h3>Welcome To Quiz App</h3>
-      <span style={{fontSize:"1.4rem",position:"absolute",right:"10px"}}>Score : {score}</span>
-      </div>
-     
-      {
-      startButton ? 
-      <div style={{position:"relative",zIndex:"9999"}}>
-      <Card datas = {datas}
-      turn = {turn} 
-      setColor = {setColor}  
-      color = {color} 
-      changeColor = {changeColor} 
-      isNext = {isNext} 
-      setIsNext = {setIsNext} 
-      score = {score} 
-      setScore = {setScore}/> 
-      </div>
-      : null
-      }
-      {
-        isLoading ? <p>yukleniyor</p> : null
-      }
-    {//{height:"100%",,display:"flex"position:"absolute",,alignItems:"center",top:"28px",justifyContent:"center"}
+
+
+`
+type MovieData = {
+  name:string;
+  poster:string;
+  runtime:string;
+
 }
-      <div style={{width:"100%"}}>
-      {!startButton && <button onClick={start} style={{width:"100%",height:"30px"}}>Start</button>}
-     
-      {startButton && <button onClick={() =>{
 
-        if(datas.length > turn + 1 && isNext === true){
-         
-         // datas[turn].answers.sort(() => 0.5 - Math.random())
-         shuffle(datas[turn].answers)
+function App() {
 
-          setTurn(prev => prev + 1)
-          setIsNext(false)
-        }
-        if(isNext === true){
-          setTurn2(prev => prev + 1)
-          shuffle(datas[turn].answers)
+ // const [wordToGuess, setWordToGuess] = useState(() => {
+  //  return words[Math.floor(Math.random() * words.length)]
+ // })
 
-        }
 
-      }} style={{width:"100%",height:"30px"}}>Next</button>  }
-     </div>
-      </div>
-      </div>}
+ const [inputState, setInputState] = useState<string>("")
+ const [data, setData] = useState<MovieData>()
+ const [allData, setAllData] = useState<MovieData[]>([])
+ const [isSearching, setIsSearching] = useState<boolean>(false)
+ const [allDataTwo, setAllDataTwo] = useState<MovieData[]>([])
+ const [counter, setCounter] = useState<number>(0);
+
+ /*
+
+
+      {allDataTwo.map(data =>(
+        <div>
+          {data.name}
+        </div>
+      ))}
+
+ */
+ const search = () =>{
+  setIsSearching(true)
+  if(inputState){
+    fetch(`http://www.omdbapi.com/?t=${inputState}&apikey=816aa18e`)
+    .then(res => res.json())
+    .then(data => setData(
       {
-      isOver && <div style={{width:"100%",height:"400px",display:"flex",justifyContent:"center",alignItems:"center",position:"absolute"}}>
-      <p onClick={() =>{
-        setIsOver(false)
-        setStartButton(false)
-        setTurn(0)
-        setTurn2(0);
-        setScore(0)
-        setIsNext(false)
-      }} style={{fontSize:"5rem",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center"}}>Game Over <span style={{fontSize:"30px"}}>click to play again</span></p>
-      </div>
+        name:data.Title,
+        poster:data.Poster,
+        runtime:data.Runtime
       
+      }))
+      
+  }
+  
+    else{
+      alert("type a movie")
+    }
+ }
+    const showAllWishlist = () =>{
+      
+      
+      if(counter === 1){
+        setCounter(0)
+        setIsSearching(true)
+        return
       }
-    </div>
-  );
+      
+      const arr:MovieData[] = [];
+
+      setIsSearching(false)
+       for(let i = 0; i < 9 ;/*localStorage.length;*/ i++){
+        //console.log(JSON.parse(localStorage.getItem(`data-${i}`)!))
+        arr.push(JSON.parse(localStorage.getItem(`data-${i}`)!))
+      //        setAllData(prev => [...prev,JSON.parse(localStorage.getItem(`data-${i}`)!)])
+      setAllData(arr)
+      setCounter(1)
+       }
+      
+    }
+   // console.log(allData)
+  return(
+    <>
+       
+      
+      <div className='app'>
+      <Wrapper>
+     <Header>My wishlist</Header> 
+     <div style={{display:"flex",alignItems:"center",marginTop:"10px",gap:"5px"}}>
+     <input className='movie-input' value={inputState} onChange={(e) =>{
+      setInputState(e.target.value)
+     }} style={{width:"350px",fontSize:"1.5rem",border:"0",borderRadius:"10px",paddingLeft:"10px"}} type="text" />
+     <Button onClick={search}>search</Button>
+     <Button onClick={showAllWishlist}>show all wishlist</Button>
+
+     </div>
+     
+     
+      </Wrapper>
+
+
+      {
+      data && isSearching ? 
+     <Moviecard data = {data}/>
+        :null
+      }
+    
+
+
+     {!isSearching &&
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,300px)",justifyContent:"center"}}>
+      {
+
+        allData.map((data,index) =>(
+          <div style={{margin:"20px"}} key={index}>
+          <img  style={{height:"400px",width:"100%",objectFit:"cover"}} src= {`${data.poster}`} alt="" />
+          </div>
+        ))
+      } 
+      
+ </div>
+}
+
+{allDataTwo.map(data =>(
+        <div>
+          {data.name}
+          <img src={data.poster} alt="" />
+        </div>
+      ))}
+     </div>
+
+    </>
+  )
+ 
+  
 }
 
 export default App;
+///grid-template-columns:repeat(auto-fill,300px)
